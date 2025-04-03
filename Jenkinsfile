@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        AZURE_CREDENTIALS_ID = 'azure-service-principal'
+        AZURE_CREDENTIALS_ID = 'jenkins-pipeline'
         RESOURCE_GROUP = 'myresource'
         APP_SERVICE_NAME = 'azure-web-jenkins'
     }
