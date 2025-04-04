@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'master', url: 'https://github.com/Yash-Khandal/azure-app-service.git'
+                git branch: 'master', url: 'https://github.com/Yash-Khandal/WebApiJenkins.git'
             }
         }
         stage('Terraform Init') {
