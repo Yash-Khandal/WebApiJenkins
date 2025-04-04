@@ -2,8 +2,8 @@ pipeline {
     agent any
     environment {
         AZURE_CREDENTIALS_ID = 'jenkins-azure-sp'
-        RESOURCE_GROUP = 'my-appservice-rg'          // Must match Terraform
-        APP_SERVICE_NAME = 'my-appservice-6g66'
+        RESOURCE_GROUP = 'terraform-rg-dotnet'          // Must match Terraform
+        APP_SERVICE_NAME = 'terraform-jenkins'
     }
     stages {
         // Stage 1: Checkout Code
