@@ -1,43 +1,44 @@
 pipeline {
     agent any
     environment {
-        AZURE_CREDENTIALS_ID = 'jenkins-pipeline'
-        RESOURCE_GROUP = 'myresource'
-        APP_SERVICE_NAME = 'azure-web-jenkins'
+        AZURE_SUBSCRIPTION_ID = credentials('6c1e198f-37fe-4942-b348-c597e7bef44b')
+        AZURE_TENANT_ID       = credentials('341f4047-ffad-4c4a-a0e7-b86c7963832b')
+        AZURE_CREDENTIALS     = credentials('0250993e-2ede-47dd-9be9-222958a77579')
+        
     }
-
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                git branch: 'master', url: 'https://github.com/Yash-Khandal/WebApiJenkins'
+                git branch: 'master', url: 'https://github.com/Yash-Khandal/azure-app-service.git'
             }
         }
-
-        stage('Build') {
+        stage('Terraform Init') {
             steps {
-                bat 'dotnet restore'
-                bat 'dotnet build --configuration Release'
-                bat 'dotnet publish -c Release -o ./publish'
+                sh 'terraform init'
             }
         }
-
-        stage('Deploy') {
+        stage('Terraform Plan') {
             steps {
-                withCredentials([azureServicePrincipal(credentialsId: AZURE_CREDENTIALS_ID)]) {
-                    bat "az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID"
-                    bat "powershell Compress-Archive -Path ./publish/* -DestinationPath ./publish.zip -Force"
-                    bat "az webapp deploy --resource-group $RESOURCE_GROUP --name $APP_SERVICE_NAME --src-path ./publish.zip --type zip"
-                }
+                sh '''
+                    terraform plan \
+                    -var "azure_subscription_id=${AZURE_SUBSCRIPTION_ID}" \
+                    -var "azure_tenant_id=${AZURE_TENANT_ID}" \
+                    -var "azure_client_id=${AZURE_CREDENTIALS_USR}" \
+                    -var "azure_client_secret=${AZURE_CREDENTIALS_PSW}"
+                '''
             }
         }
-    }
-
-    post {
-        success {
-            echo 'Deployment Successful!'
-        }
-        failure {
-            echo 'Deployment Failed!'
+        stage('Terraform Apply') {
+            steps {
+                input message: 'Approve deployment?', ok: 'Yes'
+                sh '''
+                    terraform apply -auto-approve \
+                    -var "azure_subscription_id=${AZURE_SUBSCRIPTION_ID}" \
+                    -var "azure_tenant_id=${AZURE_TENANT_ID}" \
+                    -var "azure_client_id=${AZURE_CREDENTIALS_USR}" \
+                    -var "azure_client_secret=${AZURE_CREDENTIALS_PSW}"
+                '''
+            }
         }
     }
 }
