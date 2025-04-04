@@ -1,44 +1,51 @@
 pipeline {
     agent any
     environment {
-        AZURE_SUBSCRIPTION_ID = '6c1e198f-37fe-4942-b348-c597e7bef44b' // This can be plain text
-        AZURE_TENANT_ID = '341f4047-ffad-4c4a-a0e7-b86c7963832b'    // This can be plain text
-        AZURE_CLIENT_ID = '0250993e-2ede-47dd-9be9-222958a77579'            // From Jenkins credentials
-        AZURE_CLIENT_SECRET = 'jVn8Q~m_nTCtVoPCuY5R9XrP7~G1D_cwTQL4FckZ'        // From Jenkins credentials
+        AZURE_CREDENTIALS_ID = '0250993e-2ede-47dd-9be9-222958a77579'
+        RESOURCE_GROUP = 'your-resource-group-name'  // Replace with your actual resource group name
+        APP_SERVICE_NAME = 'your-app-service-name'    // Replace with your actual app service name
+        AZURE_SUBSCRIPTION_ID = '6c1e198f-37fe-4942-b348-c597e7bef44b'
+        AZURE_TENANT_ID = '341f4047-ffad-4c4a-a0e7-b86c7963832b'
     }
+
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
                 git branch: 'master', url: 'https://github.com/Yash-Khandal/WebApiJenkins.git'
             }
         }
-        stage('Terraform Init') {
+
+        stage('Build') {
             steps {
-                sh 'terraform init'
+                bat 'dotnet restore'
+                bat 'dotnet build --configuration Release'
+                bat 'dotnet publish -c Release -o ./publish'
             }
         }
-        stage('Terraform Plan') {
+
+        stage('Deploy') {
             steps {
-                sh '''
-                    terraform plan \
-                    -var "azure_subscription_id=${AZURE_SUBSCRIPTION_ID}" \
-                    -var "azure_tenant_id=${AZURE_TENANT_ID}" \
-                    -var "azure_client_id=${AZURE_CLIENT_ID}" \
-                    -var "azure_client_secret=${AZURE_CLIENT_SECRET}"
-                '''
+                withCredentials([azureServicePrincipal(
+                    credentialsId: env.AZURE_CREDENTIALS_ID,
+                    subscriptionIdVariable: 'AZURE_SUBSCRIPTION_ID',
+                    clientIdVariable: 'AZURE_CLIENT_ID',
+                    clientSecretVariable: 'AZURE_CLIENT_SECRET',
+                    tenantIdVariable: 'AZURE_TENANT_ID'
+                )]) {
+                    bat "az account set --subscription $AZURE_SUBSCRIPTION_ID"
+                    bat "powershell Compress-Archive -Path ./publish/* -DestinationPath ./publish.zip -Force"
+                    bat "az webapp deploy --resource-group $RESOURCE_GROUP --name $APP_SERVICE_NAME --src-path ./publish.zip --type zip"
+                }
             }
         }
-        stage('Terraform Apply') {
-            steps {
-                input message: 'Approve deployment?', ok: 'Yes'
-                sh '''
-                    terraform apply -auto-approve \
-                    -var "azure_subscription_id=${AZURE_SUBSCRIPTION_ID}" \
-                    -var "azure_tenant_id=${AZURE_TENANT_ID}" \
-                    -var "azure_client_id=${AZURE_CLIENT_ID}" \
-                    -var "azure_client_secret=${AZURE_CLIENT_SECRET}"
-                '''
-            }
+    }
+
+    post {
+        success {
+            echo 'Deployment Successful!'
+        }
+        failure {
+            echo 'Deployment Failed!'
         }
     }
 }
