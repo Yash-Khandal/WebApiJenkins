@@ -32,10 +32,10 @@ pipeline {
         stage('Deploy to Azure') {
             steps {
                 withCredentials([
-                    string(credentialsId: 'AZURE_CLIENT_ID', variable: 'AZURE_CLIENT_ID'),
-                    string(credentialsId: 'AZURE_CLIENT_SECRET', variable: 'AZURE_CLIENT_SECRET'),
-                    string(credentialsId: 'AZURE_TENANT_ID', variable: 'AZURE_TENANT_ID'),
-                    string(credentialsId: 'AZURE_SUBSCRIPTION_ID', variable: 'AZURE_SUBSCRIPTION_ID')
+                    string(credentialsId: '341c0480-6cf6-4f3f-b85a-59ac32084293', variable: 'AZURE_CLIENT_ID'),
+                    string(credentialsId: ' q4r8Q~xzxT-ae7Gx74t3MilSIumZvQg_TO1wQc-0', variable: 'AZURE_CLIENT_SECRET'),
+                    string(credentialsId: '341f4047-ffad-4c4a-a0e7-b86c7963832b', variable: 'AZURE_TENANT_ID'),
+                    string(credentialsId: '6c1e198f-37fe-4942-b348-c597e7bef44b', variable: 'AZURE_SUBSCRIPTION_ID')
                 ]) {
                     bat '''
                         echo "Logging in to Azure..."
