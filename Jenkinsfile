@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        AZURE_CREDENTIALS_ID = 'Azure Credentials'
+        AZURE_CREDENTIALS_ID = 'Azure-Credentials'
         RESOURCE_GROUP = 'terraform-rg-dotnet'          // Must match Terraform
         APP_SERVICE_NAME = 'terraform-jenkins'
     }
